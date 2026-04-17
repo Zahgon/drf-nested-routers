@@ -36,33 +36,7 @@ class NestedHyperlinkedRelatedField(HyperlinkedRelatedField, Generic[T_Model]):
         May raise a `NoReverseMatch` if the `view_name` and `lookup_field`
         attributes are not configured to correctly match the URL conf.
         """
-        # Unsaved objects will not yet have a valid URL.
-        if hasattr(obj, 'pk') and obj.pk in (None, ''):
-            return None
-
-        # default lookup from rest_framework.relations.HyperlinkedRelatedField
-        lookup_value = getattr(obj, self.lookup_field)
-        kwargs = {self.lookup_url_kwarg: lookup_value}
-
-        # multi-level lookup
-        for parent_lookup_kwarg in list(self.parent_lookup_kwargs.keys()):
-            underscored_lookup = self.parent_lookup_kwargs[parent_lookup_kwarg]
-
-            # split each lookup by their __, e.g. "parent__pk" will be split into "parent" and "pk", or
-            # "parent__super__pk" would be split into "parent", "super" and "pk"
-            lookups = underscored_lookup.split('__')
-
-            try:
-                # use the Django ORM to lookup this value, e.g., obj.parent.pk
-                lookup_value = reduce(getattr, [obj] + lookups)  # type: ignore[operator,arg-type]
-            except AttributeError:
-                # Not nested. Act like a standard HyperlinkedRelatedField
-                return super().get_url(obj, view_name, request, format)
-
-            # store the lookup_name and value in kwargs, which is later passed to the reverse method
-            kwargs.update({parent_lookup_kwarg: lookup_value})
-
-        return self.reverse(view_name, kwargs=kwargs, request=request, format=format)
+        pass
 
     def get_object(self, view_name: str, view_args: list[Any], view_kwargs: dict[str, Any]) -> T_Model:
         """
@@ -71,32 +45,13 @@ class NestedHyperlinkedRelatedField(HyperlinkedRelatedField, Generic[T_Model]):
         Takes the matched URL conf arguments, and should return an
         object instance, or raise an `ObjectDoesNotExist` exception.
         """
-        # default lookup from rest_framework.relations.HyperlinkedRelatedField
-        lookup_value = view_kwargs[self.lookup_url_kwarg]
-        kwargs = {self.lookup_url_kwarg: lookup_value}
-
-        # multi-level lookup
-        for parent_lookup_kwarg in list(self.parent_lookup_kwargs.keys()):
-            lookup_value = view_kwargs[parent_lookup_kwarg]
-            kwargs.update({self.parent_lookup_kwargs[parent_lookup_kwarg]: lookup_value})
-
-        return self.get_queryset().get(**kwargs)
+        pass
 
     def use_pk_only_optimization(self) -> bool:
-        return False
+        pass
 
     def to_internal_value(self, data: Any) -> T_Model:
-        try:
-            return super().to_internal_value(data)
-        except ValidationError as err:
-            if err.detail[0].code != 'no_match':  # type: ignore[union-attr,index]
-                raise
-
-            # data is probable the lookup value, not the resource URL
-            try:
-                return self.get_queryset().get(**{self.lookup_field: data})
-            except (ObjectDoesNotExist, ObjectValueError, ObjectTypeError):
-                self.fail('does_not_exist')
+        pass
 
 
 class NestedHyperlinkedIdentityField(NestedHyperlinkedRelatedField[T_Model]):

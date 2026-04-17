@@ -40,13 +40,7 @@ class NestedHyperlinkedModelSerializer(rest_framework.serializers.HyperlinkedMod
         super().__init__(*args, **kwargs)
 
     def build_url_field(self, field_name: str, model_class: T_Model) -> tuple[type[Field], dict[str, Any]]:
-        field_class, field_kwargs = super().build_url_field(
-            field_name,
-            model_class
-        )
-        field_kwargs['parent_lookup_kwargs'] = self.parent_lookup_kwargs
-
-        return field_class, field_kwargs
+        pass
 
     def build_nested_field(
         self, field_name: str, relation_info: RelationInfo, nested_depth: int
@@ -54,13 +48,4 @@ class NestedHyperlinkedModelSerializer(rest_framework.serializers.HyperlinkedMod
         """
         Create nested fields for forward and reverse relationships.
         """
-        class NestedSerializer(NestedHyperlinkedModelSerializer):
-            class Meta:
-                model = relation_info.related_model
-                depth = nested_depth - 1
-                fields = '__all__'
-
-        field_class = NestedSerializer
-        field_kwargs = get_nested_relation_kwargs(relation_info)
-
-        return field_class, field_kwargs
+        pass
